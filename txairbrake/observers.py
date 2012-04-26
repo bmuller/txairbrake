@@ -23,7 +23,7 @@ class AirbrakeLogObserver:
             return
         xml = self.generateXML(eventDict['failure'])
         headers = {"Content-Type": "text/xml"}
-        d = getPage(self.airbrakeURL, None, method="POST", postdata=xml, headers=headers)
+        d = getPage(self.airbrakeURL, None, method="POST", postdata=xml, headers=headers, timeout=2)
         d.addErrback(self._onError)
         return d
 
