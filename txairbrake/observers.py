@@ -63,7 +63,7 @@ class AirbrakeLogObserver:
         error.addElement('message', content=record.getErrorMessage())
         backtrace = error.addElement('backtrace')
         for filename, line_number, function_name, text in traceback.extract_tb(record.getTracebackObject()):
-            attribs = {'file': filename, 'number': str(line_number), 'method': "{0}: {1}".format(function_name, text)}
+            attribs = {'file': filename, 'number': str(line_number), 'method': "%s: %s" % (function_name, text)}
             backtrace.addChild(domish.Element((None, 'line'), attribs=attribs))
 
         return str(notice.toXml())
