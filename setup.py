@@ -1,8 +1,5 @@
 #!/usr/bin/env python
-try:
-    from setuptools import setup, Extension
-except ImportError:
-    from distutils.core import setup, Extension
+from setuptools import setup, find_packages
 
 setup(
     name="txairbrake",
@@ -12,6 +9,6 @@ setup(
     author_email="bamuller@gmail.com",
     license="MIT",
     url="http://github.com/bmuller/txairbrake",
-    packages=["txairbrake"],
+    packages=find_packages(),
     requires=["twisted.words.xish", "twisted.web.client"]
 )

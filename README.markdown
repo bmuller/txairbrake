@@ -3,9 +3,7 @@
 
 ## Installation
 
-    git clone https://github.com/bmuller/txairbrake
-    cd txairbrake
-    python setup.py install
+    easy_install txairbrake
 
 ## Usage
 
