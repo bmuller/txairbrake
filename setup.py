@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="txairbrake",
-    version="0.1",
+    version="0.2",
     description="txairbrake reports exceptions in Twisted code to an airbrake server",
     author="Brian Muller",
     author_email="bamuller@gmail.com",
