@@ -4,7 +4,7 @@ from twisted.python.log import addObserver, removeObserver
 from twisted.words.xish import domish
 from twisted.web.client import getPage
 
-DEFAULT_AIRBRAKE_HOST = "airbrakeapp.com"
+DEFAULT_AIRBRAKE_HOST = "api.airbrake.io"
 AIRBRAKE_API_PATH = "/notifier_api/v2/notices"
 
 from txairbrake import version
