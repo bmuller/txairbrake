@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
 
+from txairbrake import version
+
 setup(
     name="txairbrake",
-    version="0.2",
+    version=version,
     description="txairbrake reports exceptions in Twisted code to an airbrake server",
     author="Brian Muller",
     author_email="bamuller@gmail.com",
