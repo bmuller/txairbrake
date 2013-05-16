@@ -82,7 +82,7 @@ class XMLTests(TestCase):
         error/message is a string message of the failure.
         """
         error_message = self.root.find('error/message')
-        self.assertEqual(error_message.text, 'this is a test exception')
+        self.assertEqual(error_message.text, 'TestException: this is a test exception')
 
 
     def test_errorBacktrace(self):

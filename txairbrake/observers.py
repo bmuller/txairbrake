@@ -72,7 +72,7 @@ class AirbrakeLogObserver:
         error_class.text = failure.value.__class__.__name__
 
         error_message = ET.SubElement(error, 'message')
-        error_message.text = failure.getErrorMessage()
+        error_message.text = '%s: %s' % (error_class.text, failure.getErrorMessage())
 
         error.append(self._tracebackToTree(traceback.extract_tb(failure.getTracebackObject())))
 
