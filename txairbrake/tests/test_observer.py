@@ -1,5 +1,9 @@
+import mock
+
 from twisted.trial.unittest import TestCase
 from twisted.python.failure import Failure
+from twisted.internet.defer import succeed
+from twisted.web.client import Agent
 
 from txairbrake.observers import AirbrakeLogObserver
 
@@ -99,4 +103,61 @@ class XMLTests(TestCase):
         self.assertTrue(last_line.get('file').endswith('txairbrake/tests/test_observer.py'))
         self.assertEqual(last_line.get('method'),
                          'fail: raise TestException("this is a test exception")')
-        self.assertEqual(last_line.get('number'), '15')
+        self.assertEqual(last_line.get('number'), '19')
+
+
+class PostExceptionTests(TestCase):
+    def setUp(self):
+        self.agent = mock.Mock(Agent)
+        self.observer = AirbrakeLogObserver(
+            'API-KEY',
+            environment='testing',
+            agent=self.agent)
+
+        self.agent.request.return_value = succeed(None)
+
+
+    def test_postsToDefaultHost(self):
+        """
+        Sends a POST request to the default URL.
+        """
+
+        d = self.observer._postException('<not-real-xml />')
+        self.successResultOf(d)
+
+        self.agent.request.assert_called_once_with(
+            'POST',
+            'http://api.airbrake.io/notifier_api/v2/notices',
+            headers=mock.ANY,
+            bodyProducer=mock.ANY)
+
+    def test_postsWithTextXMLContentType(self):
+        """
+        Sends a text/xml content-type header.
+        """
+        d = self.observer._postException('<not-real-xml />')
+        self.successResultOf(d)
+
+        self.assertEqual(self.agent.request.call_count, 1)
+
+        (name, args, kwargs) = self.agent.request.mock_calls[0]
+        self.assertEqual(kwargs['headers'].getRawHeaders('content-type'),
+                         ['text/xml'])
+
+    @mock.patch('txairbrake.observers.FileBodyProducer')
+    def test_postsFileBodyProducer(self, FileBodyProducer):
+        """
+        Calls request with a FileBodyProducer that has the xml as the value
+        value of a StringIO.
+        """
+        d = self.observer._postException('<not-real-xml />')
+        self.successResultOf(d)
+
+        self.assertEqual(self.agent.request.call_count, 1)
+
+        (name, args, kwargs) = self.agent.request.mock_calls[0]
+
+        self.assertEqual(kwargs['bodyProducer'], FileBodyProducer.return_value)
+
+        (name, args, kwargs) = FileBodyProducer.mock_calls[0]
+        self.assertEqual(args[0].getvalue(), '<not-real-xml />')

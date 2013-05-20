@@ -1,7 +1,9 @@
 import traceback
+from StringIO import StringIO
 
 from twisted.python.log import addObserver, removeObserver
-from twisted.web.client import getPage
+from twisted.web.client import Agent, FileBodyProducer, HTTPConnectionPool
+from twisted.web.http_headers import Headers
 
 import xml.etree.ElementTree as ET
 
@@ -13,20 +15,42 @@ from txairbrake import version
 
 
 class AirbrakeLogObserver:
-    def __init__(self, apikey, environment=None, use_ssl=False, airbrakeHost=None):
+    def __init__(self,
+                 apikey,
+                 environment=None,
+                 use_ssl=False,
+                 airbrakeHost=None,
+                 agent=None):
         self.apikey = apikey
         self.environment = environment or "unknown"
         host = airbrakeHost or DEFAULT_AIRBRAKE_HOST
         protocol = "https://" if use_ssl else "http://"
         self.airbrakeURL = protocol + host + AIRBRAKE_API_PATH
 
+        if agent is None:
+            from twisted.internet import reactor
+
+            agent = Agent(reactor,
+                          connectTimeout=2,
+                          pool=HTTPConnectionPool(reactor, persistent=True))
+
+        self._agent = agent
+
+
+    def _postException(self, exceptionXML):
+        d = self._agent.request(
+            'POST',
+            self.airbrakeURL,
+            headers=Headers({'Content-Type': ['text/xml']}),
+            bodyProducer=FileBodyProducer(StringIO(exceptionXML)))
+        return d
+
 
     def emit(self, eventDict):
         if not eventDict['isError'] or not 'failure' in eventDict:
             return
         tree = self._eventDictToTree(eventDict)
-        headers = {"Content-Type": "text/xml"}
-        d = getPage(self.airbrakeURL, None, method="POST", postdata=ET.tostring(tree), headers=headers, timeout=2)
+        d = self._postException(ET.tostring(tree))
         d.addErrback(self._onError)
         return d
 

@@ -12,5 +12,5 @@ setup(
     license="MIT",
     url="http://github.com/bmuller/txairbrake",
     packages=find_packages(),
-    requires=["twisted.words.xish", "twisted.web.client"]
+    install_requires=['Twisted >= 12.1', 'mock']
 )
