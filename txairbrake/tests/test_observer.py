@@ -166,22 +166,15 @@ class PostExceptionTests(TestCase):
         self.assertEqual(args[0].getvalue(), '<not-real-xml />')
 
 
-class AirbrakeLogObserverTests(object):
+class AirbrakeLogObserverTests(TestCase):
     @mock.patch('txairbrake.observers.Agent')
     def test_defaultAgent(self, Agent):
         """
         When an agent is not specified we use a default agent with a
-        persistent HTTPConnectionPool, default reactor, and connectTimeout of 2.
+        default reactor, and connectTimeout of 2.
         """
         observer = AirbrakeLogObserver('API-KEY', environment='testing')
 
         self.assertEqual(observer._agent, Agent.return_value)
 
-        self.assertEqual(Agent.call_count, 1)
-
-        (name, args, kwargs) = Agent.mock_calls[0]
-        self.assertEqual(args, (reactor,))
-        self.assertEqual(kwargs['connectTimeout'], 2)
-        self.assertEqual(kwargs['pool'].persistent, True)
-
-
+        Agent.assert_called_once_with(reactor, connectTimeout=2)
