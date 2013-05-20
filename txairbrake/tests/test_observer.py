@@ -3,6 +3,9 @@ import mock
 from twisted.trial.unittest import TestCase
 from twisted.python.failure import Failure
 from twisted.internet.defer import succeed
+
+from twisted.internet import reactor
+
 from twisted.web.client import Agent
 
 from txairbrake.observers import AirbrakeLogObserver
@@ -103,7 +106,7 @@ class XMLTests(TestCase):
         self.assertTrue(last_line.get('file').endswith('txairbrake/tests/test_observer.py'))
         self.assertEqual(last_line.get('method'),
                          'fail: raise TestException("this is a test exception")')
-        self.assertEqual(last_line.get('number'), '19')
+        self.assertEqual(last_line.get('number'), '22')
 
 
 class PostExceptionTests(TestCase):
@@ -161,3 +164,24 @@ class PostExceptionTests(TestCase):
 
         (name, args, kwargs) = FileBodyProducer.mock_calls[0]
         self.assertEqual(args[0].getvalue(), '<not-real-xml />')
+
+
+class AirbrakeLogObserverTests(object):
+    @mock.patch('txairbrake.observers.Agent')
+    def test_defaultAgent(self, Agent):
+        """
+        When an agent is not specified we use a default agent with a
+        persistent HTTPConnectionPool, default reactor, and connectTimeout of 2.
+        """
+        observer = AirbrakeLogObserver('API-KEY', environment='testing')
+
+        self.assertEqual(observer._agent, Agent.return_value)
+
+        self.assertEqual(Agent.call_count, 1)
+
+        (name, args, kwargs) = Agent.mock_calls[0]
+        self.assertEqual(args, (reactor,))
+        self.assertEqual(kwargs['connectTimeout'], 2)
+        self.assertEqual(kwargs['pool'].persistent, True)
+
+
