@@ -1,5 +1,5 @@
 # txairbrake: Airbrake error reporting for Twisted
-[![Build Status](https://secure.travis-ci.org/bmuller/txyam.png?branch=master)](https://travis-ci.org/bmuller/txyam)
+[![Build Status](https://secure.travis-ci.org/bmuller/txairbrake.png?branch=master)](https://travis-ci.org/bmuller/txairbrake)
 
 [Airbrake](http://www.airbrake.io) provides a service that aggregates errors from applications.  This project is specifically designed for asynchronous [Python Twisted](http://twistedmatrix.com) code to send exceptions to an airbrake server.  Unlike traditional synchronous Python code, there can be no blocking in the error reporting in a Twisted project.  This library connects to the remote server in a non-blocking fashion.
 
