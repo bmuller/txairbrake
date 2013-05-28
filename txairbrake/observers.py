@@ -30,7 +30,7 @@ class AirbrakeLogObserver:
         if agent is None:
             from twisted.internet import reactor
 
-            agent = Agent(reactor, connectTimeout=2)
+            agent = Agent(reactor, connectTimeout=5)
 
         self._agent = agent
 
