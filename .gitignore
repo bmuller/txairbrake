@@ -2,3 +2,4 @@ build
 dist
 txairbrake.egg-info
 *.pyc
+_trial_temp

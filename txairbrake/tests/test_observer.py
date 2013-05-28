@@ -171,10 +171,10 @@ class AirbrakeLogObserverTests(TestCase):
     def test_defaultAgent(self, Agent):
         """
         When an agent is not specified we use a default agent with a
-        default reactor, and connectTimeout of 2.
+        default reactor, and connectTimeout of 5.
         """
         observer = AirbrakeLogObserver('API-KEY', environment='testing')
 
         self.assertEqual(observer._agent, Agent.return_value)
 
-        Agent.assert_called_once_with(reactor, connectTimeout=2)
+        Agent.assert_called_once_with(reactor, connectTimeout=5)
