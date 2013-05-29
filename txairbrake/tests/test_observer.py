@@ -17,6 +17,10 @@ class TestException(Exception):
     """
 
 
+def deep_failure():
+    return fail()
+
+
 def fail():
     try:
         raise TestException("this is a test exception")
@@ -28,7 +32,7 @@ def fail():
 class XMLTests(TestCase):
     def setUp(self):
         self.observer = AirbrakeLogObserver('API-KEY', environment='testing')
-        self.failure = fail()
+        self.failure = deep_failure()
         self.eventDict = {'failure': self.failure,
                           'why': 'Test why.'}
         self.root = self.observer._eventDictToTree(self.eventDict)
@@ -102,11 +106,22 @@ class XMLTests(TestCase):
         """
         lines = self.root.findall('error/backtrace/line')
         self.assertNotEqual(len(lines), 0)
-        last_line = lines[0]
+        last_line = lines[-1]
         self.assertTrue(last_line.get('file').endswith('txairbrake/tests/test_observer.py'))
         self.assertEqual(last_line.get('method'),
                          'fail: raise TestException("this is a test exception")')
-        self.assertEqual(last_line.get('number'), '22')
+        self.assertEqual(last_line.get('number'), '26')
+
+
+    def test_deepBacktrace(self):
+        """
+        error/backtrace includes lines above where the exception was caught and
+        logged.  This makes makes _tracebackToTree equalvent to
+        failure.printTraceback with defualt arguments.
+        """
+        lines = self.root.findall('error/backtrace/line')
+        self.assertEqual(lines[-2].get('method'), 'deep_failure: return fail()')
+
 
 
 class PostExceptionTests(TestCase):

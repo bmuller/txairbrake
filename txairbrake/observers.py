@@ -1,4 +1,4 @@
-import traceback
+import linecache
 from StringIO import StringIO
 
 from twisted.python.log import addObserver, removeObserver
@@ -96,18 +96,22 @@ class AirbrakeLogObserver:
         error_message = ET.SubElement(error, 'message')
         error_message.text = '%s: %s' % (error_class.text, failure.getErrorMessage())
 
-        error.append(self._tracebackToTree(traceback.extract_tb(failure.getTracebackObject())))
+        error.append(self._tracebackToTree(failure))
 
         return notice
 
 
-    def _tracebackToTree(self, tb):
+    def _tracebackToTree(self, failure):
         backtrace = ET.Element('backtrace')
 
-        for filename, line_number, function_name, text in tb:
+        frames = failure.stack + failure.frames
+
+        for function_name, filename, line_number, localz, globalz in frames:
             attrib = {'file': filename,
                       'number': str(line_number),
-                      'method': "%s: %s" % (function_name, text)}
+                      'method': "%s: %s" % (
+                        function_name,
+                        linecache.getline(filename, line_number).strip())}
             backtrace.append(ET.Element('line', attrib=attrib))
 
         return backtrace
