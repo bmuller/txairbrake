@@ -2,7 +2,7 @@ import mock
 
 from twisted.trial.unittest import TestCase
 from twisted.python.failure import Failure
-from twisted.internet.defer import succeed
+from twisted.internet.defer import succeed, fail
 
 from twisted.internet import reactor
 
@@ -18,10 +18,10 @@ class TestException(Exception):
 
 
 def deep_failure():
-    return fail()
+    return fail_with_traceback()
 
 
-def fail():
+def fail_with_traceback():
     try:
         raise TestException("this is a test exception")
     except:
@@ -101,15 +101,15 @@ class XMLTests(TestCase):
         error/backtrace has a number of line children with file, line number,
         method.
 
-        The values in this test will need to change if it moves or if the fail
-        function moves.
+        The values in this test will need to change if it moves or if the
+        fail_with_traceback function moves.
         """
         lines = self.root.findall('error/backtrace/line')
         self.assertNotEqual(len(lines), 0)
         last_line = lines[-1]
         self.assertTrue(last_line.get('file').endswith('txairbrake/tests/test_observer.py'))
         self.assertEqual(last_line.get('method'),
-                         'fail: raise TestException("this is a test exception")')
+                         'fail_with_traceback: raise TestException("this is a test exception")')
         self.assertEqual(last_line.get('number'), '26')
 
 
@@ -120,7 +120,7 @@ class XMLTests(TestCase):
         failure.printTraceback with defualt arguments.
         """
         lines = self.root.findall('error/backtrace/line')
-        self.assertEqual(lines[-2].get('method'), 'deep_failure: return fail()')
+        self.assertEqual(lines[-2].get('method'), 'deep_failure: return fail_with_traceback()')
 
 
 
@@ -200,10 +200,15 @@ class AirbrakeLogObserverTests(TestCase):
         When _postException fails we restart the observer after handling it.
         """
         logModule = mock.Mock()
-        _postException.return_value = succeed(fail())
+
+        postFailure = deep_failure()
+        _postException.return_value = fail(postFailure)
         observer = AirbrakeLogObserver('API-KEY', _logModule=logModule)
 
-        observer.emit({'isError': True, 'failure': fail()})
+        observer.emit({'isError': True, 'failure': deep_failure()})
 
         logModule.removeObserver.assert_called_once_with(observer.emit)
         logModule.addObserver.assert_called_once_with(observer.emit)
+        logModule.err.assert_called_once_with(
+            postFailure,
+            'Unhandled error logging exception to http://api.airbrake.io/notifier_api/v2/notices')

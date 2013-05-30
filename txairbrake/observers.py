@@ -64,7 +64,9 @@ class AirbrakeLogObserver:
         Stop observer, raise exception, then restart.  This prevents an infinite ping pong game of exceptions.
         """
         self.stop()
-        error.raiseException()
+        self._logModule.err(
+            error,
+            "Unhandled error logging exception to %s" % (self.airbrakeURL,))
         self.start()
 
 
