@@ -1,8 +1,7 @@
 import linecache
 from StringIO import StringIO
 
-from twisted.python.log import addObserver, removeObserver
-from twisted.web.client import Agent, FileBodyProducer, HTTPConnectionPool
+from twisted.web.client import Agent, FileBodyProducer
 from twisted.web.http_headers import Headers
 
 import xml.etree.ElementTree as ET
@@ -20,7 +19,8 @@ class AirbrakeLogObserver:
                  environment=None,
                  use_ssl=False,
                  airbrakeHost=None,
-                 agent=None):
+                 agent=None,
+                 _logModule=None):
         self.apikey = apikey
         self.environment = environment or "unknown"
         host = airbrakeHost or DEFAULT_AIRBRAKE_HOST
@@ -33,6 +33,12 @@ class AirbrakeLogObserver:
             agent = Agent(reactor, connectTimeout=5)
 
         self._agent = agent
+
+        if _logModule is None:
+            from twisted.python import log
+            _logModule = log
+
+        self._logModule = _logModule
 
 
     def _postException(self, exceptionXML):
@@ -63,11 +69,11 @@ class AirbrakeLogObserver:
 
 
     def start(self):
-        addObserver(self.emit)
+        self._logModule.addObserver(self.emit)
 
 
     def stop(self):
-        removeObserver(self.emit)
+        self._logModule.removeObserver(self.emit)
 
 
     def _eventDictToTree(self, eventDict):

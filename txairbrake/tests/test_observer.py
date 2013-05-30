@@ -193,3 +193,17 @@ class AirbrakeLogObserverTests(TestCase):
         self.assertEqual(observer._agent, Agent.return_value)
 
         Agent.assert_called_once_with(reactor, connectTimeout=5)
+
+    @mock.patch('txairbrake.observers.AirbrakeLogObserver._postException')
+    def test_restartAfterError(self, _postException):
+        """
+        When _postException fails we restart the observer after handling it.
+        """
+        logModule = mock.Mock()
+        _postException.return_value = succeed(fail())
+        observer = AirbrakeLogObserver('API-KEY', _logModule=logModule)
+
+        observer.emit({'isError': True, 'failure': fail()})
+
+        logModule.removeObserver.assert_called_once_with(observer.emit)
+        logModule.addObserver.assert_called_once_with(observer.emit)
